@@ -1,0 +1,23 @@
+{
+  "name": "exprerts-checker",
+  "version": "1.0.0",
+  "description": "A bot that checks whether a Vkontakte user is an expert or not",
+  "author": "xZeldon <xzeldon@yandex.ru> (https://zeldon.ru)",
+  "main": "src/index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "@vk-io/hear": "^1.0.2",
+    "dotenv": "^8.2.0",
+    "fs-extra": "^9.0.1",
+    "got": "^11.8.0",
+    "puppeteer": "^5.5.0",
+    "redis": "^3.0.2",
+    "vk-io": "^4.0.4"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.6"
+  }
+}
