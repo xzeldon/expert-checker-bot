@@ -6,7 +6,7 @@ const { fetchToken } = require('./fetchToken')
 const { createCache } = require('./cacher')
 
 const fetchChart = async (vk) => {
-  const grpInfo = await vk.api.call('groups.getById', { // Получаем информацию о количесве участников в группе кекспертов
+  const grpInfo = await vk.api.call('groups.getById', { // Получаем информацию о количестве участников в группе кекспертов
     group_id: 'vkexperts',
     fields: 'members_count'
   })
