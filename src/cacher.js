@@ -34,7 +34,7 @@ const createCache = async () => {
     })
     
   } catch (err) {
-    console.error(`An error occurred during caching:\n\n ${err}\n\nRetry in 5s`);
+    console.error(`An error occurred during caching:\n\n ${err}`);
   }
 }
 
