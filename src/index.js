@@ -30,6 +30,12 @@ setInterval(async () => { // Таймер обновления базы данн
 
 const hearManager = new HearManager()
 
+const devMode = (context, next) => context.senderId === Number(process.env.ADMIN_ID) ? next() : 0
+
+vk.updates.on('message', (context, next) => {
+	process.env.MODE === 'development' ? devMode(context, next) : next()
+})
+
 vk.updates.on('message_new', hearManager.middleware)
 
 const generateStats = (parsedUser) => {
