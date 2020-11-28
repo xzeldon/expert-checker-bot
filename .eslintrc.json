@@ -1,0 +1,39 @@
+{
+	"env": {
+		"node": true
+	},
+	"extends": [
+		"airbnb-base"
+  ],
+  "plugins": [
+		"import"
+	],
+	"rules": {
+    "import/extensions": ["error", "ignorePackages", {
+			"js": "never",
+			"ts": "never"
+		}],
+		"import/prefer-default-export": "off",
+		"import/no-default-export": ["error"],
+		"import/no-cycle": "off",
+		"no-restricted-syntax": ["error", "WithStatement"],
+		"linebreak-style": ["error", "unix"],
+		"comma-dangle": ["error", "never"],
+		"no-param-reassign": ["error", {
+			"props": false
+		}],
+		"no-unused-expressions": "off",
+		"no-dupe-class-members": "off",
+		"no-await-in-loop": "off",
+		"arrow-parens": "off",
+		"no-continue": "off",
+		"no-tabs": ["error", {
+			"allowIndentationTabs": true
+		}],
+		"no-plusplus": "off",
+		"no-shadow": "off",
+		"camelcase": "off",
+		"indent": "off",
+		"prefer-destructuring": "off"
+	}
+}

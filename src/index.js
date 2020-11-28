@@ -1,154 +1,159 @@
-require('dotenv').config({ path: './config.env' })
-const { VK, resolveResource } = require('vk-io')
-const { HearManager } = require('@vk-io/hear')
-const fs = require('fs-extra')
+/* eslint-disable no-console */
 
-const { promisify } = require("util")
+require('dotenv').config({ path: './config.env' });
+const { VK, resolveResource } = require('vk-io');
+const { HearManager } = require('@vk-io/hear');
+const fs = require('fs-extra');
 
-const { client, DB_PATH } = require('./cacher')
-const fetchChart = require('./fetchChart')
+const { promisify } = require('util');
 
-fs.ensureFile(DB_PATH)
+const { client, DB_PATH } = require('./cacher');
+const fetchChart = require('./fetchChart');
 
-const getAsync = promisify(client.get).bind(client)
+fs.ensureFile(DB_PATH);
+
+const getAsync = promisify(client.get).bind(client);
 
 const vk = new VK({
 	token: process.env.GROUP_TOKEN
 });
 
-fetchChart(vk) // Создание базы данных при первом запуске
+fetchChart(vk); // Создание базы данных при первом запуске
 
 setInterval(async () => { // Таймер обновления базы данных (дефолт раз в 24 часа)
-	fetchChart(vk)
+	fetchChart(vk);
 
 	return vk.api.call('messages.send', { // Уведомляем об успешном кешировании
 		peer_ids: process.env.ADMIN_ID,
-		message: `Кеширование успешно завершено!`,
+		message: 'Кеширование успешно завершено!',
 		random_id: 0
-	})
-}, 3600000)
+	});
+}, 3600000);
 
-const hearManager = new HearManager()
+const hearManager = new HearManager();
 
-const devMode = (context, next) => context.senderId === Number(process.env.ADMIN_ID) ? next() : 0
+const devMode = (context, next) => (context.senderId === Number(process.env.ADMIN_ID) ? next() : 0);
 
 vk.updates.on('message', (context, next) => {
-	process.env.MODE === 'development' ? devMode(context, next) : next()
-})
+	process.env.MODE === 'development' ? devMode(context, next) : next();
+});
 
-vk.updates.on('message_new', hearManager.middleware)
+vk.updates.on('message_new', hearManager.middleware);
 
-const generateStats = (parsedUser) => {
-	return `
+const generateStats = (parsedUser) => `
 	🧐 ID: @id${parsedUser.user_id}
 		🔥 Тематика: ${parsedUser.topic_name}
 		🏆 Место в топе: ${parsedUser.position}
-	`
-}
+	`;
 
 hearManager.hear('кеш', async (context) => { // При необходимости можем обновлять нашу базу данных в любой момент. Не рекомендую делать это слишком часто, так как капча.
 	if (context.senderId === Number(process.env.ADMIN_ID)) {
-		await fetchChart(vk)
+		await fetchChart(vk);
 		return vk.api.call('messages.send', {
 			peer_ids: process.env.ADMIN_ID,
-			message: `Кеширование успешно завершено!`,
+			message: 'Кеширование успешно завершено!',
 			random_id: 0
-		})
+		});
 	}
 
-	return context.send({ sticker_id: Number(process.env.STICKER_ID) }) // Если пользователь не мы сами (админ), то отправляем дружелюбный стикер.
-})
+	// Если пользователь не мы сами (админ), то отправляем дружелюбный стикер.
+	return context.send({ sticker_id: Number(process.env.STICKER_ID) });
+});
 
 hearManager.hear(/^(?:чек)\s?([0-9]+|[id{\d}|@([A-Za-z]+(?:\.\w+)*])?$/i, async (context) => {
-	let user
-	let userId
-	let screen_name
+	let user;
+	let userId;
+	let screen_name;
 
-	context.$match[1] ? screen_name = context.$match[1].replace(/\[+(.*?)\]+/g,"$1") : screen_name = undefined
+	context.$match[1] ? screen_name = context.$match[1].replace(/\[+(.*?)\]+/g, '$1') : screen_name = undefined;
 
-	const mentionRegEx = /@[a-zA-Z](\.?[\w-]+)*$/
-	
+	const mentionRegEx = /@[a-zA-Z](\.?[\w-]+)*$/;
+
 	if (mentionRegEx.test(screen_name)) {
-		screen_name = screen_name.match(mentionRegEx)[0].replace('@', '')
-		
+		screen_name = screen_name.match(mentionRegEx)[0].replace('@', '');
+
 		const resource = await resolveResource({
 			api: vk.api,
 			resource: screen_name
-		})
+		});
 
 		if (resource.type === 'user') {
-			userId = resource.id
+			userId = resource.id;
 		} else {
-			userId = 'group'
+			userId = 'group';
 		}
 	}
 
 	if (userId === 'group') {
-		return context.send({ sticker_id: Number(process.env.STICKER_ID) })
+		return context.send({ sticker_id: Number(process.env.STICKER_ID) });
 	}
 
 	if (!userId) {
-		context.$match[1] ? userId = context.$match[1] : userId = context.senderId
-		context.hasReplyMessage ? userId = context.replyMessage.senderId : undefined
+		context.$match[1] ? userId = context.$match[1] : userId = context.senderId;
+		context.hasReplyMessage ? userId = context.replyMessage.senderId : undefined;
 	}
-	
+
 	if (context.hasForwards) {
-		context.forwards.length === 1 ? userId = context.forwards[0].senderId : undefined
+		context.forwards.length === 1 ? userId = context.forwards[0].senderId : undefined;
 
 		if (context.forwards.length > 1) {
-			let list = `` // переменная для формирования сообщения
-			let ids = [] // список всех айдишников
+			let list = ''; // переменная для формирования сообщения
+			let ids = []; // список всех айдишников
 			for (let i = 0; i < context.forwards.length; i++) { // пушим найденные айдишники в ids
-				ids.push(context.forwards[i].senderId)
+				ids.push(context.forwards[i].senderId);
 			}
 
-			ids = [...new Set(ids)] // удаляем повторяющиеся айдишники
-			
+			ids = [...new Set(ids)]; // удаляем повторяющиеся айдишники
+
 			for (let i = 0; i < ids.length; i++) {
-				let user
+				let user;
 
-				context.append = (_list) => list += _list+"\n"
+				// eslint-disable-next-line no-return-assign, no-loop-func
+				context.append = (_list) => list += `${_list}\n`;
 
-				user = await getAsync(ids[i])
-				
+				user = await getAsync(ids[i]);
+
 				if (user) {
-					user = JSON.parse(user)
-					context.append(generateStats(user))
+					user = JSON.parse(user);
+					context.append(generateStats(user));
 				} else {
 					context.append(`
 					🧐 ID: @id${ids[i]}
 					❌ Не эксперт
-					`)
+					`);
 				}
 			}
 			return context.send(list, {
 				disable_mentions: 1
-			})
+			});
 		}
 	}
 
 	if (context.replyMessage) { // если додик отправляет нам группу, а не юзера
-		if (context.replyMessage.senderType == 'group') {
-			context.send({ sticker_id: Number(process.env.STICKER_ID) }) // то отправляем ему дружелюбный стикер <3
-			return
+		if (context.replyMessage.senderType === 'group') {
+			// то отправляем ему дружелюбный стикер <3
+			context.send({ sticker_id: Number(process.env.STICKER_ID) });
+			return 1;
 		}
 	}
 
 	try {
-		user = await getAsync(userId)
+		user = await getAsync(userId);
 	} catch (err) {
-		console.error(err)
+		console.error(err);
 	}
 
 	if (!user) {
-		context.send('Не эксперт')
-		return
+		context.send('Не эксперт');
+		return 1;
 	}
 
-	user = JSON.parse(user)
+	user = JSON.parse(user);
 	context.send(generateStats(user), {
 		disable_mentions: 1
-	})
+	});
+
+	return 0;
 });
 
-vk.updates.start().catch(console.error)
+vk.updates.start().catch(console.error);
