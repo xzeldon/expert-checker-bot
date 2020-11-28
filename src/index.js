@@ -1,5 +1,5 @@
 require('dotenv').config({ path: './config.env' })
-const { VK } = require('vk-io')
+const { VK, resolveResource } = require('vk-io')
 const { HearManager } = require('@vk-io/hear')
 const fs = require('fs-extra')
 
@@ -59,12 +59,30 @@ hearManager.hear('кеш', async (context) => { // При необходимос
 	return context.send({ sticker_id: Number(process.env.STICKER_ID) }) // Если пользователь не мы сами (админ), то отправляем дружелюбный стикер.
 })
 
-hearManager.hear(/^(?:чек)\s?([0-9]+)?$/i, async (context) => {
+hearManager.hear(/^(?:чек)\s?([0-9]+|[id{\d}|@([A-Za-z]+(?:\.\w+)*])?$/i, async (context) => {
 	let user
 	let userId
+	let screen_name
 
-	context.$match[1] ? userId = context.$match[1] : userId = context.senderId
-	context.hasReplyMessage ? userId = context.replyMessage.senderId : undefined
+	context.$match[1] ? screen_name = context.$match[1].replace(/\[+(.*?)\]+/g,"$1") : screen_name = undefined
+
+	const mentionRegEx = /@[a-zA-Z](\.?[\w-]+)*$/
+	
+	if (mentionRegEx.test(screen_name)) {
+		screen_name = screen_name.match(mentionRegEx)[0].replace('@', '')
+		
+		const resource = await resolveResource({
+			api: vk.api,
+			resource: screen_name
+		})
+
+		userId = resource.id
+	}
+
+	if (!userId) {
+		context.$match[1] ? userId = context.$match[1] : userId = context.senderId
+		context.hasReplyMessage ? userId = context.replyMessage.senderId : undefined
+	}
 	
 	if (context.hasForwards) {
 		context.forwards.length === 1 ? userId = context.forwards[0].senderId : undefined
