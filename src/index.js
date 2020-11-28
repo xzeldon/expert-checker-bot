@@ -28,7 +28,7 @@ setInterval(async () => { // Таймер обновления базы данн
 		message: 'Кеширование успешно завершено!',
 		random_id: 0
 	});
-}, 3600000);
+}, 86400000);
 
 const hearManager = new HearManager();
 
