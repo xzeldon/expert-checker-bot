@@ -76,7 +76,15 @@ hearManager.hear(/^(?:чек)\s?([0-9]+|[id{\d}|@([A-Za-z]+(?:\.\w+)*])?$/i, asy
 			resource: screen_name
 		})
 
-		userId = resource.id
+		if (resource.type === 'user') {
+			userId = resource.id
+		} else {
+			userId = 'group'
+		}
+	}
+
+	if (userId === 'group') {
+		return context.send({ sticker_id: Number(process.env.STICKER_ID) })
 	}
 
 	if (!userId) {
