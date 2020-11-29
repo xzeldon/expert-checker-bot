@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
 require('dotenv').config({ path: './config.env' });
-const { VK, resolveResource } = require('vk-io');
+const { VK } = require('vk-io');
 const { HearManager } = require('@vk-io/hear');
 const fs = require('fs-extra');
 
@@ -67,25 +67,15 @@ hearManager.hear(/^(?:чек)\s?([0-9]+|[id{\d}|@([A-Za-z]+(?:\.\w+)*])?$/i, asy
 
 	context.$match[1] ? screen_name = context.$match[1].replace(/\[+(.*?)\]+/g, '$1') : screen_name = undefined;
 
-	const mentionRegEx = /@[a-zA-Z](\.?[\w-]+)*$/;
+	const idRegEx = /^id[0-9]+$/;
 
-	if (mentionRegEx.test(screen_name)) {
-		screen_name = screen_name.match(mentionRegEx)[0].replace('@', '');
-
-		const resource = await resolveResource({
-			api: vk.api,
-			resource: screen_name
-		});
-
-		if (resource.type === 'user') {
-			userId = resource.id;
-		} else {
-			userId = 'group';
-		}
+	if (screen_name) {
+		screen_name = context.$match[1].replace(/\[+(.*?)\]+/g, '$1');
+		screen_name = screen_name.replace(/\|.+/g, "$'");
 	}
 
-	if (userId === 'group') {
-		return context.send({ sticker_id: Number(process.env.STICKER_ID) });
+	if (idRegEx.test(screen_name)) {
+		userId = screen_name.replace(/\D/g, '');
 	}
 
 	if (!userId) {
