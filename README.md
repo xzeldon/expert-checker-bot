@@ -2,7 +2,7 @@
 
 ## Installation
 > **[Node.js](https://nodejs.org/) 12.0.0 or newer is required**  
-> **[Reis](https://redis.io/) is required**  
+> **[Redis](https://redis.io/) is required**  
 > **[Chromium](https://packages.debian.org/ru/chromium) is required**
 
 ### Yarn
